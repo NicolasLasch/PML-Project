@@ -7,11 +7,12 @@ import warnings
 warnings.filterwarnings('ignore')
 
 from src import *
+from src.model_train_eval import train_random_forest, train_xgboost, hyperparameter_tuning_rf, hyperparameter_tuning_xgb, compare_models, evaluate_model, get_feature_importance
+from src.constants.file_path_constants import *
 
+# Raw Data File Path
 RAW_FILE_PATH = 'data/raw/bergen_merged.csv'
-PROCESSED_FILE_PATH = 'data/processed'
-OUTPUT_FOLDER = 'output'
-OUTPUT_MODEL_FOLDER = 'models'
+# Train, Val and Test Ratios
 TRAIN_VAL_TEST_RATIO = 0.2
 TRAIN_VAL_RATIO = 0.25
 
@@ -199,39 +200,76 @@ print(f"  Holiday percentage: {high_error_cases['is_holiday'].mean()*100:.1f}%")
 
 
 # --- Saving Outputs & Best Model ---
+
+def save_outputs(outputs : dict, with_index = None):
+
+    for path, output in outputs.items():
+        if isinstance(output, pd.DataFrame):
+            # Save Dataframe
+            Path(path).parent.mkdir(
+                parents=True, 
+                exist_ok=True
+            )
+            # Check if df should include index (by variable or id)
+            index_flag = with_index is not None and (
+                output is comparison_results or id(output) in with_index
+            )
+            output.to_csv(
+                path,
+                index=index_flag    # True for comparison_results, False for others
+            )
+            print(f"Saved {path}")
+        # Save Charts
+        elif isinstance(output, plt.Figure):
+            full_path = f"{OUTPUT_CHARTS_FOLDER}/{path}"
+            Path(full_path).parent.mkdir(
+                parents = True,
+                exist_ok = True
+            )
+            output.savefig(full_path)
+            print(f"Saved chart to {full_path}")
+        
+        else:
+            print(f"Skipping unsupported type for {path}")
+
+
 # Save Best Model
 joblib.dump(best_model, f'models/{best_model_name}.joblib')
 print(f"\nBest model saved as {best_model_name}.joblib")
+# Save output csv
+outputs = {
+    MC_FILE_PATH : comparison_results,
+    FI_FILE_PATH : importance_df,
+    PRED_FILE_PATH : results_df,
+    PROCESSED_FILE_PATH : clean_bicycles_df,
+    FE_FILE_PATH : features_df
+}
+save_outputs(outputs, with_index = {id(comparison_results)})
 
-def save_outputs(dfs, paths, with_index=None):
-    for df, path in zip(dfs, paths):
-        path.parent.mkdir(
-            parents=True, 
-            exist_ok=True
-        )
-        # Check if df should include index (by variable or id)
-        index_flag = with_index is not None and (
-            df is comparison_results or id(df) in with_index
-        )
-        df.to_csv(
-            path,
-            index=index_flag    # True for comparison_results, False for others
-        )
-        print(f"Saved {path}")
 
-output_paths = [
-    Path('output/model_comparison_results.csv'),
-    Path('output/feature_importance.csv'),
-    Path('output/predictions.csv'),
-    Path('data/processed/processed_bergen_merged.csv'),
-    Path('data/processed/feature_engineered_bergen_merged.csv')
-]
-outputs = [
-    comparison_results, # Model Comparison Results
-    importance_df,      # Feature Importance
-    results_df,         # Predictions
-    clean_bicycles_df,  # Processed Dataframe
-    features_df         # Feature Engineered Dataframe
-]
-# Save outputs
-save_outputs(outputs, output_paths, with_index = {id(comparison_results)})
+
+# --- Visualizations --- (optional)
+# Feature Importance
+feature_importance_chart = plot_feature_importance(importance_df)
+# Predictions and Residuals
+predictions_chart = plot_actual_vs_predicted(y_test, y_pred)
+residuals_chart = plot_residuals(y_test, y_pred)
+# Patterns
+hourly_patterns_chart = plot_hourly_patterns(features_df)
+weather_correlation_chart = plot_weather_correlation(features_df)
+seasonal_patterns_chart = plot_seasonal_patterns(features_df)
+# Model Comparison Results
+model_comparison_chart = plot_model_comparison(comparison_results)
+
+        
+# Initiate Charts dict (key = path, value = figure)
+charts = {
+    MC_CHART : model_comparison_chart,
+    FI_CHART : feature_importance_chart,
+    PRED_CHART : predictions_chart,
+    HOURLY_PATTERN_CHART : hourly_patterns_chart,
+    WEATHER_CORR_HEATMAP : weather_correlation_chart,
+    SEASONAL_PATTERN_CHART : seasonal_patterns_chart
+}
+# Save Charts
+save_outputs(charts)
