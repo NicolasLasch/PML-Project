@@ -1,4 +1,5 @@
-from src.station_reco import recommend_best_station, format_recommendation_output, get_feature_columns
+from src import get_feature_columns
+from src.station_reco import recommend_best_station, format_recommendation_output
 import pandas as pd
 import joblib
 
