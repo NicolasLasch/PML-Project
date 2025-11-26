@@ -234,8 +234,9 @@ def save_outputs(outputs : dict, with_index = None):
 
 
 # Save Best Model
+print("\nSaving Models / Results ... ... ...")
 joblib.dump(best_model, f'models/{best_model_name}.joblib')
-print(f"\nBest model saved as {best_model_name}.joblib")
+print(f"Best model saved as {best_model_name}.joblib")
 # Save output csv
 outputs = {
     MC_FILE_PATH : comparison_results,
@@ -249,6 +250,7 @@ save_outputs(outputs, with_index = {id(comparison_results)})
 
 
 # --- Visualizations --- (optional)
+print("\nConfiguring Exploratory Data Analysis ... ... ...")
 # Feature Importance
 feature_importance_chart = plot_feature_importance(importance_df)
 # Predictions and Residuals
