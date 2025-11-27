@@ -3,5 +3,6 @@ numpy
 scikit-learn
 xgboost
 joblib
+flask
 matplotlib
 seaborn
