@@ -6,9 +6,15 @@ from pathlib import Path
 import warnings
 warnings.filterwarnings('ignore')
 
-from src import *
-from src.model_train_eval import train_random_forest, train_xgboost, hyperparameter_tuning_rf, hyperparameter_tuning_xgb, compare_models, evaluate_model, get_feature_importance
-from src.constants.file_path_constants import *
+from data_processing import preprocess_pipeline
+from feature_engineering import feature_engineering_pipeline, get_feature_columns, prepare_train_test_split
+from visual_analysis import *
+from model_train_eval import (
+    train_random_forest, train_xgboost, hyperparameter_tuning_rf,
+    hyperparameter_tuning_xgb, compare_models, evaluate_model,
+    get_feature_importance
+)
+from constants.file_path_constants import *
 
 
 def run_full_pipeline():
@@ -41,6 +47,8 @@ def run_full_pipeline():
 
     # --- Feature Engineering ---
     features_df = feature_engineering_pipeline(clean_bicycles_df)
+    # Extracting 100 samples
+    sample_features = features_df.sample(100, random_state=42)
 
     print("[ FEATURE ENGINEERING ]")
     print(f"Feature DataFrame Shape: {features_df.shape}")
@@ -249,7 +257,8 @@ def run_full_pipeline():
         FI_FILE_PATH : importance_df,
         PRED_FILE_PATH : results_df,
         PROCESSED_FILE_PATH : clean_bicycles_df,
-        FE_FILE_PATH : features_df
+        FE_FILE_PATH : features_df,
+        SAMPLE_FEATURES_FILE_PATH : sample_features
     }
     save_outputs(outputs, with_index = {id(comparison_results)})
 
@@ -283,6 +292,10 @@ def run_full_pipeline():
     save_outputs(charts)
 
     print("\n=== PIPELINE COMPLETE ===")
-    print(f"Best Model: {best_model_name}")
-    print(f"Models saved to: models/")
-    print(f"Outputs saved to: output/")
+    print(f"    Best Model: {best_model_name}")
+    print(f"    Models saved to: models/")
+    print(f"    Outputs saved to: output/")
+
+
+if __name__ == "__main__":
+    run_full_pipeline()
