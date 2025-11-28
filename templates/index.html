@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Bergen Bike Demand Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    .container { max-width: 700px; margin: 0 auto; }
+    h1, h2, h3 { color: #2c3e50; }
+    select, button { padding: 8px; font-size: 1em; margin-top: 10px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+    table, th, td { border: 1px solid #ddd; padding: 8px; }
+    th { background-color: #f4f4f4; text-align: left; }
+    .result-box { border: 2px solid #27ae60; background: #eafaf1; padding: 15px; margin-top: 20px; border-radius: 6px; }
+    .error { color: #e74c3c; margin-top: 20px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>Bergen Bike Demand Dashboard</h1>
+
+    <form method="post">
+      <label for="row_index">Select a data row to predict:</label><br>
+      <select id="row_index" name="row_index" style="width: 100%;">
+        {% for idx, label in options %}
+          <option value="{{ idx }}" {% if selected_idx == idx %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+      <br>
+      <button type="submit">Predict</button>
+    </form>
+
+    {% if error %}
+      <p class="error">Error: {{ error }}</p>
+    {% endif %}
+
+    {% if prediction %}
+      <div class="result-box">
+        <h2>Prediction Results</h2>
+        <table>
+          <tr><th>Actual trips</th><td>{{ selected_row.trip_count }}</td></tr>
+          <tr><th>Predicted trips</th><td><strong>{{ prediction }}</strong></td></tr>
+          <tr><th>Error</th>
+            <td>
+              {{ (prediction - selected_row.trip_count) | round(1) }} trips
+              ({{ ((prediction / selected_row.trip_count - 1) * 100) | round(1) }}%)
+            </td>
+          </tr>
+        </table>
+
+        <h3>Context</h3>
+        <p>
+          <strong>Station:</strong> {{ selected_row.start_station_name }}<br>
+          <strong>Date & Hour:</strong> {{ selected_row.date }} {{ selected_row.hour }}h<br>
+          <strong>Rush hour:</strong> {{ 'Yes' if selected_row.is_rush_hour else 'No' }}<br>
+          <strong>Weather:</strong> {{ selected_row.temperature }}°C, Wind speed: {{ selected_row.wind_speed }} m/s<br>
+          <strong>Station average trips:</strong> {{ selected_row.station_avg_trips | round(2) }}
+        </p>
+      </div>
+    {% endif %}
+  </div>
+
+</body>
+</html>
