@@ -1,6 +1,7 @@
 # Raw and Processed path
 PROCESSED_FILE_PATH = 'data/processed/processed_bergen_merged.csv'
 FE_FILE_PATH = 'data/processed/feature_engineered_bergen_merged.csv'
+SAMPLE_FEATURES_FILE_PATH = 'data/processed/sample_features.csv'
 # Output file paths
 MC_FILE_PATH = 'output/model_comparison_results.csv'
 FI_FILE_PATH = 'output/feature_importance.csv'
