@@ -1,6 +1,6 @@
 import pandas as pd
 
-# Run setup.py before executing to get dataframe if needed
+# Run main.py before executing to get dataframe if needed
 
 try:
     features_df = pd.read_csv("data/processed/feature_engineered_bergen_merged.csv")
@@ -52,7 +52,7 @@ try:
 
 
 except FileNotFoundError as fnf_error:
-    print(f"File not found: {fnf_error}. Run setup.py before this script if needed.")
+    print(f"File not found: {fnf_error}. Run main.py before this script if needed.")
 
 except Exception as e:  # Catch any other errors
-    print(f"An unexpected error occurred: {e}. Make sure setup.py has run and all dependencies exist.")    
+    print(f"An unexpected error occurred: {e}. Make sure main.py has run and all dependencies exist.")    

@@ -3,7 +3,7 @@ from src.station_reco import recommend_best_station, format_recommendation_outpu
 import pandas as pd
 import joblib
 
-# Run setup.py before executing to get best model and dataframes for recommendations if needed
+# Run main.py before executing to get best model and dataframes for recommendations if needed
 
 try:
     # Load feature dataframe
@@ -35,7 +35,7 @@ try:
     print(format_recommendation_output(recommendations))
 
 except FileNotFoundError as fnf_error:
-    print(f"File not found: {fnf_error}. Run setup.py before this script if needed.")
+    print(f"File not found: {fnf_error}. Run main.py before this script if needed.")
 
 except Exception as e:  # Catch any other errors
-    print(f"An unexpected error occurred: {e}. Make sure setup.py has run and all dependencies exist.")
+    print(f"An unexpected error occurred: {e}. Make sure main.py has run and all dependencies exist.")
