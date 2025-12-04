@@ -82,61 +82,61 @@ def health():
     })
 
 
-@app.route("/predict", methods = ["POST"])
-def predict_api():
-    """
-    JSON API endpoint, expects JSON:
-    {
-      "features": {
-        "start_time": "2025-03-01 08:00:00",
-        "end_time": "2025-03-01 08:10:00",
-        "duration": 600,
-        "start_station_id": 101,
-        "start_station_name": "Bergen Central",
-        "start_station_latitude": 60.3913,
-        "start_station_longitude": 5.3221,
-        "end_station_id": 102,
-        "end_station_name": "Station B",
-        "end_station_latitude": 60.3920,
-        "end_station_longitude": 5.3240,
-        "temperature": 12.3,
-        "max_temperature": 15.0,
-        "min_temperature": 8.0,
-        "wind_speed": 3.5,
-        "precipitation": 0.2,
-        "humidity": 65.0,
-        "weather": "Cloudy",
-        "sunshine": 3.0,
-        "season": 2,
-        "is_holiday": 0,
-        "is_weekend": 1
-      }
-    }    """
-    try:
-        data = request.get_json()
-        if data is None or "features" not in data:
-            return jsonify(
-                {"error" : "Request JSON must contain 'features'"}
-            ),400
+# @app.route("/predict", methods = ["POST"])
+# def predict_api():
+#     """
+#     JSON API endpoint, expects JSON:
+#     {
+#       "features": {
+#         "start_time": "2025-03-01 08:00:00",
+#         "end_time": "2025-03-01 08:10:00",
+#         "duration": 600,
+#         "start_station_id": 101,
+#         "start_station_name": "Bergen Central",
+#         "start_station_latitude": 60.3913,
+#         "start_station_longitude": 5.3221,
+#         "end_station_id": 102,
+#         "end_station_name": "Station B",
+#         "end_station_latitude": 60.3920,
+#         "end_station_longitude": 5.3240,
+#         "temperature": 12.3,
+#         "max_temperature": 15.0,
+#         "min_temperature": 8.0,
+#         "wind_speed": 3.5,
+#         "precipitation": 0.2,
+#         "humidity": 65.0,
+#         "weather": "Cloudy",
+#         "sunshine": 3.0,
+#         "season": 2,
+#         "is_holiday": 0,
+#         "is_weekend": 1
+#       }
+#     }    """
+#     try:
+#         data = request.get_json()
+#         if data is None or "features" not in data:
+#             return jsonify(
+#                 {"error" : "Request JSON must contain 'features'"}
+#             ),400
 
-        raw = data["features"]
+#         raw = data["features"]
 
-        raw_df = pd.DataFrame([raw])
+#         raw_df = pd.DataFrame([raw])
 
-        # Pipelines
-        clean_df = preprocess_pipeline(raw_df)
-        feature_df = feature_engineering_pipeline(clean_df)
+#         # Pipelines
+#         clean_df = preprocess_pipeline(raw_df)
+#         feature_df = feature_engineering_pipeline(clean_df)
 
-        # Ensure correct order/columns
-        X = feature_df[feature_cols]
+#         # Ensure correct order/columns
+#         X = feature_df[feature_cols]
 
-        # Predict
-        y_pred = best_model.predict(X)[0]
+#         # Predict
+#         y_pred = best_model.predict(X)[0]
 
-        return jsonify({"predicted_trip_counts" : float(y_pred)})
+#         return jsonify({"predicted_trip_counts" : float(y_pred)})
 
-    except Exception as e:
-        return jsonify({"error" : str(e)}), 500
+#     except Exception as e:
+#         return jsonify({"error" : str(e)}), 500
 
 
 def main():
