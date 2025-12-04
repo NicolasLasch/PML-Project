@@ -1,65 +1,1146 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Bergen Bike Demand Dashboard</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 20px; }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1, h2, h3 { color: #2c3e50; }
-    select, button { padding: 8px; font-size: 1em; margin-top: 10px; }
-    table { border-collapse: collapse; width: 100%; margin-top: 15px; }
-    table, th, td { border: 1px solid #ddd; padding: 8px; }
-    th { background-color: #f4f4f4; text-align: left; }
-    .result-box { border: 2px solid #27ae60; background: #eafaf1; padding: 15px; margin-top: 20px; border-radius: 6px; }
-    .error { color: #e74c3c; margin-top: 20px; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bergen Bike Intelligence</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: #0f1419;
+            color: #e2e8f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+            border: 1px solid #334155;
+        }
+
+        h1 {
+            font-size: 2em;
+            font-weight: 600;
+            color: #f1f5f9;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95em;
+            font-weight: 400;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-4px);
+            border-color: #4f46e5;
+            box-shadow: 0 8px 24px rgba(79, 70, 229, 0.15);
+        }
+
+        .metric-label {
+            color: #94a3b8;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .metric-value {
+            font-size: 2em;
+            font-weight: 700;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 280px;
+            width: 100%;
+        }
+
+        #map {
+            height: 280px;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .comparison-section {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid #334155;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            background: #0f172a;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 12px;
+            background: transparent;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.95em;
+            font-weight: 500;
+        }
+
+        .mode-btn.active {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .mode-btn:hover:not(.active) {
+            border-color: #6366f1;
+            color: #e2e8f0;
+        }
+
+        .control-bar {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        select, input {
+            flex: 1;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            color: #e2e8f0;
+            font-size: 0.95em;
+        }
+
+        select:focus, input:focus {
+            border-color: #6366f1;
+            outline: none;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);
+        }
+
+        .drag-instruction {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+
+        .coord-display {
+            background: #0f172a;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85em;
+            color: #94a3b8;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+
+        .context-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+            padding: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 8px;
+        }
+
+        .context-item {
+            text-align: center;
+        }
+
+        .context-label {
+            font-size: 0.75em;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .context-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .actual-box {
+            text-align: center;
+            padding: 24px;
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+            border-radius: 8px;
+            margin-bottom: 24px;
+        }
+
+        .actual-label {
+            font-size: 0.85em;
+            color: rgba(255, 255, 255, 0.8);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+
+        .actual-value {
+            font-size: 3.5em;
+            font-weight: 700;
+            color: white;
+        }
+
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .model-card {
+            background: #0f172a;
+            border: 2px solid #334155;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .model-card.best {
+            border-color: #fbbf24;
+            background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%);
+        }
+
+        .model-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .model-name {
+            font-weight: 600;
+            font-size: 0.95em;
+            color: #f1f5f9;
+        }
+
+        .rank-badge {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.85em;
+            color: #0f172a;
+        }
+
+        .rank-1 { background: linear-gradient(135deg, #fbbf24, #f59e0b); }
+        .rank-2 { background: linear-gradient(135deg, #94a3b8, #cbd5e1); }
+        .rank-3 { background: linear-gradient(135deg, #fb923c, #f97316); }
+        .rank-4 { background: linear-gradient(135deg, #64748b, #475569); }
+
+        .model-prediction {
+            font-size: 2.2em;
+            font-weight: 700;
+            margin: 12px 0;
+        }
+
+        .model-prediction.good { color: #22c55e; }
+        .model-prediction.bad { color: #ef4444; }
+
+        .model-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 16px 0;
+        }
+
+        .stat-item {
+            background: #1e293b;
+            padding: 8px;
+            border-radius: 6px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+        }
+
+        .stat-label {
+            color: #94a3b8;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+
+        .accuracy-section {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #334155;
+        }
+
+        .accuracy-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85em;
+            margin-bottom: 8px;
+        }
+
+        .accuracy-bar {
+            height: 6px;
+            background: #1e293b;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .accuracy-fill {
+            height: 100%;
+            border-radius: 10px;
+            transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .accuracy-fill.good {
+            background: linear-gradient(90deg, #22c55e, #10b981);
+        }
+
+        .accuracy-fill.bad {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+        }
+
+        .recommendation-box {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .recommendation-title {
+            font-size: 1.2em;
+            font-weight: 600;
+            color: #22c55e;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #94a3b8;
+        }
+
+        .spinner {
+            border: 3px solid #1e293b;
+            border-top: 3px solid #6366f1;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .leaflet-popup-content-wrapper {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+
+        .leaflet-popup-tip {
+            background: #1e293b;
+        }
+
+        @media (max-width: 1400px) {
+            .models-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .context-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 640px) {
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .models-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .context-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
+    <div class="container">
+        <header>
+            <h1>🚴 Bergen Bike Intelligence</h1>
+            <p class="subtitle">Real-time ML Model Performance & Station Recommendations</p>
+        </header>
 
-  <div class="container">
-    <h1>Bergen Bike Demand Dashboard</h1>
+        <div class="metrics-grid" id="metricsGrid">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading...
+            </div>
+        </div>
 
-    <form method="post">
-      <label for="row_index">Select a data row to predict:</label><br>
-      <select id="row_index" name="row_index" style="width: 100%;">
-        {% for idx, label in options %}
-          <option value="{{ idx }}" {% if selected_idx == idx %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-      <br>
-      <button type="submit">Predict</button>
-    </form>
+        <div class="dashboard-grid">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📈 Prediction Timeline</h2>
+                    <span id="chartModelName" style="color: #6366f1; font-weight: 600;">XGB Tuned</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="timeseriesChart"></canvas>
+                </div>
+            </div>
 
-    {% if error %}
-      <p class="error">Error: {{ error }}</p>
-    {% endif %}
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">📍 Station Network</h2>
+                    <span id="stationCount" style="color: #6366f1; font-weight: 600;">0 stations</span>
+                </div>
+                <div id="map"></div>
+            </div>
+        </div>
 
-    {% if prediction %}
-      <div class="result-box">
-        <h2>Prediction Results</h2>
-        <table>
-          <tr><th>Actual trips</th><td>{{ selected_row.trip_count }}</td></tr>
-          <tr><th>Predicted trips</th><td><strong>{{ prediction }}</strong></td></tr>
-          <tr><th>Error</th>
-            <td>
-              {{ (prediction - selected_row.trip_count) | round(1) }} trips
-              ({{ ((prediction / selected_row.trip_count - 1) * 100) | round(1) }}%)
-            </td>
-          </tr>
-        </table>
+        <div class="comparison-section">
+            <div class="mode-selector">
+                <button class="mode-btn active" onclick="switchMode('historical')">
+                    📊 Historical Analysis
+                </button>
+                <button class="mode-btn" onclick="switchMode('recommendation')">
+                    🎯 Find Best Station
+                </button>
+            </div>
 
-        <h3>Context</h3>
-        <p>
-          <strong>Station:</strong> {{ selected_row.start_station_name }}<br>
-          <strong>Date & Hour:</strong> {{ selected_row.date }} {{ selected_row.hour }}h<br>
-          <strong>Rush hour:</strong> {{ 'Yes' if selected_row.is_rush_hour else 'No' }}<br>
-          <strong>Weather:</strong> {{ selected_row.temperature }}°C, Wind speed: {{ selected_row.wind_speed }} m/s<br>
-          <strong>Station average trips:</strong> {{ selected_row.station_avg_trips | round(2) }}
-        </p>
-      </div>
-    {% endif %}
-  </div>
+            <div id="historicalMode">
+                <div class="control-bar">
+                    <select id="sampleSelect">
+                        <option>Loading samples...</option>
+                    </select>
+                    <button onclick="runPrediction()">🔄 Run Prediction</button>
+                </div>
+            </div>
 
-</body>
-</html>
+            <div id="recommendationMode" style="display: none;">
+                <div class="drag-instruction">
+                    🖱️ Drag the red marker on the map to set your location
+                </div>
+                <div class="coord-display" id="coordDisplay">
+                    📍 Lat: 60.3913, Lon: 5.3221
+                </div>
+                <div class="control-bar">
+                    <input type="number" id="targetHour" placeholder="Hour (0-23)" value="8" min="0" max="23">
+                    <button onclick="findBestStation()">🔍 Find Best Station</button>
+                </div>
+            </div>
+
+            <div id="comparisonContent">
+                <div class="loading">
+                    Select a mode and run analysis
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dashboardData = null;
+        let map = null;
+        let timeseriesChart = null;
+        let currentPredictionData = null;
+        let selectedModelName = 'XGB_Tuned';
+        let draggableMarker = null;
+        let userLocation = { lat: 60.3913, lon: 5.3221 };
+        let mapMarkers = {
+            selected: null,
+            user: null,
+            recommended: []
+        };
+
+        async function initDashboard() {
+            try {
+                const response = await fetch('/api/init');
+                dashboardData = await response.json();
+                
+                renderMetrics(dashboardData.metrics);
+                initMap(dashboardData.stations);
+                populateSampleSelect(dashboardData.samples);
+                
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        function renderMetrics(metrics) {
+            const grid = document.getElementById('metricsGrid');
+            
+            const cards = [
+                { label: 'Best Model', value: metrics.best_model.replace('_', ' ') },
+                { label: 'Active Stations', value: metrics.total_stations },
+                { label: 'Avg Trips/Hour', value: metrics.avg_trips },
+                { label: 'Data Samples', value: metrics.total_samples.toLocaleString() }
+            ];
+            
+            grid.innerHTML = cards.map(card => `
+                <div class="metric-card">
+                    <div class="metric-label">${card.label}</div>
+                    <div class="metric-value">${card.value}</div>
+                </div>
+            `).join('');
+        }
+
+        function initMap(geojson) {
+            map = L.map('map', {
+                zoomControl: false
+            }).setView([60.3913, 5.3221], 13);
+            
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap'
+            }).addTo(map);
+            
+            L.geoJSON(geojson, {
+                pointToLayer: (feature, latlng) => {
+                    return L.circleMarker(latlng, {
+                        radius: 6,
+                        fillColor: '#6366f1',
+                        color: '#fff',
+                        weight: 2,
+                        opacity: 1,
+                        fillOpacity: 0.8
+                    });
+                },
+                onEachFeature: (feature, layer) => {
+                    layer.bindPopup(`
+                        <div style="padding: 8px;">
+                            <h3 style="margin: 0 0 4px 0; font-size: 1em; color: #e2e8f0;">${feature.properties.name}</h3>
+                            <p style="margin: 0; color: #94a3b8; font-size: 0.9em;">Avg: ${feature.properties.avg_trips} trips/h</p>
+                        </div>
+                    `);
+                    
+                    layer.on('mouseover', function() {
+                        this.setStyle({ radius: 9, fillColor: '#22c55e' });
+                    });
+                    
+                    layer.on('mouseout', function() {
+                        this.setStyle({ radius: 6, fillColor: '#6366f1' });
+                    });
+                }
+            }).addTo(map);
+            
+            const redIcon = L.divIcon({
+                className: 'custom-div-icon',
+                html: `<div style="
+                    background: #ef4444;
+                    width: 24px;
+                    height: 24px;
+                    border-radius: 50%;
+                    border: 3px solid white;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+                    cursor: move;
+                "></div>`,
+                iconSize: [24, 24],
+                iconAnchor: [12, 12]
+            });
+            
+            draggableMarker = L.marker([userLocation.lat, userLocation.lon], {
+                icon: redIcon,
+                draggable: true
+            });
+            
+            draggableMarker.on('dragend', function(e) {
+                const position = e.target.getLatLng();
+                userLocation.lat = position.lat;
+                userLocation.lon = position.lng;
+                updateCoordDisplay();
+            });
+            
+            draggableMarker.bindPopup(`
+                <div style="padding: 8px;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 1em; color: #e2e8f0;">📍 Your Location</h3>
+                    <p style="margin: 0; color: #ef4444; font-size: 0.85em;">Drag me to set location</p>
+                </div>
+            `);
+            
+            document.getElementById('stationCount').textContent = `${geojson.features.length} stations`;
+        }
+
+        function updateCoordDisplay() {
+            document.getElementById('coordDisplay').innerHTML = 
+                `📍 Lat: ${userLocation.lat.toFixed(4)}, Lon: ${userLocation.lon.toFixed(4)}`;
+        }
+
+        function clearMapMarkers() {
+            if (mapMarkers.selected) {
+                map.removeLayer(mapMarkers.selected);
+                mapMarkers.selected = null;
+            }
+            if (mapMarkers.user) {
+                map.removeLayer(mapMarkers.user);
+                mapMarkers.user = null;
+            }
+            mapMarkers.recommended.forEach(marker => map.removeLayer(marker));
+            mapMarkers.recommended = [];
+        }
+
+        function updateMapWithPrediction(selectedStation) {
+            clearMapMarkers();
+            
+            if (draggableMarker && map.hasLayer(draggableMarker)) {
+                map.removeLayer(draggableMarker);
+            }
+            
+            mapMarkers.selected = L.circleMarker([selectedStation.lat, selectedStation.lon], {
+                radius: 12,
+                fillColor: '#f97316',
+                color: '#fff',
+                weight: 3,
+                opacity: 1,
+                fillOpacity: 0.9
+            }).addTo(map);
+            
+            mapMarkers.selected.bindPopup(`
+                <div style="padding: 8px;">
+                    <h3 style="margin: 0 0 4px 0; font-size: 1em; color: #e2e8f0;">🎯 ${selectedStation.name}</h3>
+                    <p style="margin: 0; color: #f97316; font-size: 0.9em; font-weight: 600;">Selected for Prediction</p>
+                </div>
+            `).openPopup();
+            
+            map.setView([selectedStation.lat, selectedStation.lon], 14, { animate: true });
+        }
+
+        function updateMapWithRecommendation(data) {
+            clearMapMarkers();
+            
+            if (!map.hasLayer(draggableMarker)) {
+                draggableMarker.addTo(map);
+            }
+            draggableMarker.setLatLng([data.user_location.lat, data.user_location.lon]);
+            
+            data.recommendations.forEach((rec, idx) => {
+                const isBest = idx === 0;
+                const marker = L.circleMarker([rec.lat, rec.lon], {
+                    radius: isBest ? 14 : 10,
+                    fillColor: isBest ? '#22c55e' : '#fbbf24',
+                    color: '#fff',
+                    weight: isBest ? 4 : 2,
+                    opacity: 1,
+                    fillOpacity: 0.9
+                }).addTo(map);
+                
+                marker.bindPopup(`
+                    <div style="padding: 8px;">
+                        <h3 style="margin: 0 0 4px 0; font-size: 1em; color: #e2e8f0;">
+                            ${isBest ? '🏆' : `#${idx + 1}`} ${rec.station_name}
+                        </h3>
+                        <p style="margin: 2px 0; color: #94a3b8; font-size: 0.85em;">
+                            Distance: ${rec.distance_km} km<br>
+                            Predicted: ${rec.predicted_trips} trips/h<br>
+                            Score: ${rec.score}
+                        </p>
+                    </div>
+                `);
+                
+                if (isBest) marker.openPopup();
+                mapMarkers.recommended.push(marker);
+            });
+            
+            const bounds = L.latLngBounds([
+                [data.user_location.lat, data.user_location.lon],
+                ...data.recommendations.map(r => [r.lat, r.lon])
+            ]);
+            map.fitBounds(bounds, { padding: [50, 50] });
+        }
+
+        function populateSampleSelect(samples) {
+            const select = document.getElementById('sampleSelect');
+            select.innerHTML = samples.map(s => 
+                `<option value="${s.index}">${s.label}</option>`
+            ).join('');
+        }
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            if (mode === 'historical') {
+                document.getElementById('historicalMode').style.display = 'block';
+                document.getElementById('recommendationMode').style.display = 'none';
+                
+                if (draggableMarker && map.hasLayer(draggableMarker)) {
+                    map.removeLayer(draggableMarker);
+                }
+            } else {
+                document.getElementById('historicalMode').style.display = 'none';
+                document.getElementById('recommendationMode').style.display = 'block';
+                
+                if (draggableMarker && !map.hasLayer(draggableMarker)) {
+                    draggableMarker.addTo(map);
+                    draggableMarker.setLatLng([userLocation.lat, userLocation.lon]);
+                }
+                
+                updateCoordDisplay();
+            }
+            
+            document.getElementById('comparisonContent').innerHTML = `
+                <div class="loading">Select a ${mode === 'historical' ? 'sample and click "Run Prediction"' : 'location and click "Find Best Station"'}</div>
+            `;
+            clearMapMarkers();
+        }
+
+        async function runPrediction() {
+            const rowIndex = document.getElementById('sampleSelect').value;
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Running prediction...</div>';
+            
+            try {
+                const response = await fetch('/api/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ row_index: parseInt(rowIndex) })
+                });
+                
+                const data = await response.json();
+                currentPredictionData = data;
+                
+                updateMapWithPrediction(data.selected_station);
+                renderComparison(data);
+                updateChartForModel(selectedModelName);
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading" style="color: #ef4444;">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function findBestStation() {
+            const hour = parseInt(document.getElementById('targetHour').value);
+            const content = document.getElementById('comparisonContent');
+            
+            content.innerHTML = '<div class="loading"><div class="spinner"></div>Finding best station...</div>';
+            
+            try {
+                const response = await fetch('/api/recommend', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        lat: userLocation.lat, 
+                        lon: userLocation.lon, 
+                        hour 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.error) {
+                    content.innerHTML = `<div class="loading" style="color: #ef4444;">Error: ${data.error}</div>`;
+                    return;
+                }
+                
+                updateMapWithRecommendation(data);
+                renderRecommendation(data);
+                
+            } catch (error) {
+                content.innerHTML = `<div class="loading" style="color: #ef4444;">Error: ${error.message}</div>`;
+            }
+        }
+
+        function renderRecommendation(data) {
+            const html = `
+                <div class="recommendation-box">
+                    <div class="recommendation-title">🏆 Best Station Found!</div>
+                    <div class="recommendation-details">
+                        <div class="context-item">
+                            <div class="context-label">Station</div>
+                            <div class="context-value">${data.best_station.name}</div>
+                        </div>
+                        <div class="context-item">
+                            <div class="context-label">Distance</div>
+                            <div class="context-value">${data.best_station.distance_km} km</div>
+                        </div>
+                        <div class="context-item">
+                            <div class="context-label">Predicted Activity</div>
+                            <div class="context-value">${data.best_station.predicted_trips} trips/h</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="context-grid">
+                <div class="context-item">
+                    <div class="context-label">Your Location</div>
+                    <div class="context-value">${data.user_location.lat.toFixed(4)}, ${data.user_location.lon.toFixed(4)}</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Target Hour</div>
+                    <div class="context-value">${data.target_hour}:00</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Match Score</div>
+                    <div class="context-value">${data.best_station.score}</div>
+                </div>
+            </div>
+
+            <h3 style="margin: 20px 0 12px 0; color: #f1f5f9;">Alternative Options:</h3>
+            <div class="models-grid">
+                ${data.recommendations.slice(1).map((rec, idx) => `
+                    <div class="model-card">
+                        <div class="model-header">
+                            <div class="model-name">${rec.station_name}</div>
+                            <div class="rank-badge rank-${idx + 2}">#${idx + 2}</div>
+                        </div>
+                        <div class="model-prediction good">
+                            ${rec.predicted_trips}
+                        </div>
+                        <div class="model-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Distance</span>
+                                <span class="stat-value">${rec.distance_km} km</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Score</span>
+                                <span class="stat-value">${rec.score}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        document.getElementById('comparisonContent').innerHTML = html;
+    }
+
+    function renderComparison(data) {
+        const modelOrder = ['XGB_Tuned', 'RF_Tuned', 'XGB_Baseline', 'RF_Baseline'];
+        const sortedModels = modelOrder
+            .filter(name => data.models[name])
+            .map((name, idx) => ({ name, rank: idx + 1, ...data.models[name] }));
+        
+        const html = `
+            <div class="context-grid">
+                <div class="context-item">
+                    <div class="context-label">Station</div>
+                    <div class="context-value">${data.context.station}</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Date</div>
+                    <div class="context-value">${data.context.date}</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Hour</div>
+                    <div class="context-value">${data.context.hour}:00</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Temperature</div>
+                    <div class="context-value">${data.context.temperature}°C</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Rush Hour</div>
+                    <div class="context-value">${data.context.is_rush_hour ? 'Yes' : 'No'}</div>
+                </div>
+                <div class="context-item">
+                    <div class="context-label">Weekend</div>
+                    <div class="context-value">${data.context.is_weekend ? 'Yes' : 'No'}</div>
+                </div>
+            </div>
+
+            <div class="actual-box">
+                <div class="actual-label">ACTUAL TRIPS</div>
+                <div class="actual-value">${data.actual}</div>
+            </div>
+
+            <div class="models-grid">
+                ${sortedModels.map(model => {
+                    const isGood = model.accuracy >= 90;
+                    const isBest = model.rank === 1;
+                    const isSelected = model.name === selectedModelName;
+                    
+                    return `
+                        <div class="model-card ${isBest ? 'best' : ''} ${isSelected ? 'selected' : ''}" onclick="updateChartForModel('${model.name}')">
+                            <div class="model-header">
+                                <div class="model-name">${model.name.replace('_', ' ')}</div>
+                                <div class="rank-badge rank-${model.rank}">${model.rank}</div>
+                            </div>
+                            
+                            <div class="model-prediction ${isGood ? 'good' : 'bad'}">
+                                ${model.prediction}
+                            </div>
+                            
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Error</span>
+                                    <span class="stat-value">${model.error > 0 ? '+' : ''}${model.error}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Error %</span>
+                                    <span class="stat-value">${model.error_pct}%</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">MAE</span>
+                                    <span class="stat-value">${model.mae}</span>
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Accuracy</span>
+                                    <span class="stat-value">${model.accuracy}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="accuracy-section">
+                                <div class="accuracy-header">
+                                    <span style="color: #94a3b8;">Accuracy</span>
+                                    <strong style="color: #e2e8f0;">${model.accuracy}%</strong>
+                                </div>
+                                <div class="accuracy-bar">
+                                    <div class="accuracy-fill ${isGood ? 'good' : 'bad'}" 
+                                         style="width: ${Math.max(0, model.accuracy)}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+        
+        document.getElementById('comparisonContent').innerHTML = html;
+    }
+
+    function updateChartForModel(modelName) {
+        if (!currentPredictionData || !currentPredictionData.timeseries[modelName]) {
+            return;
+        }
+        
+        selectedModelName = modelName;
+        document.getElementById('chartModelName').textContent = modelName.replace('_', ' ');
+        
+        const data = currentPredictionData.timeseries[modelName];
+        const ctx = document.getElementById('timeseriesChart').getContext('2d');
+        
+        if (timeseriesChart) {
+            timeseriesChart.destroy();
+        }
+        
+        document.querySelectorAll('.model-card').forEach(card => {
+            card.classList.remove('selected');
+        });
+        const selectedCard = Array.from(document.querySelectorAll('.model-card'))
+            .find(card => card.textContent.includes(modelName.replace('_', ' ')));
+        if (selectedCard) {
+            selectedCard.classList.add('selected');
+        }
+        
+        timeseriesChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.time.split(' ')[1]),
+                datasets: [
+                    {
+                        label: 'Actual',
+                        data: data.map(d => d.actual),
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    },
+                    {
+                        label: `Predicted (${modelName.replace('_', ' ')})`,
+                        data: data.map(d => d.predicted),
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        borderDash: [5, 5],
+                        pointRadius: 2,
+                        pointHoverRadius: 5,
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: '#e2e8f0',
+                            font: {
+                                size: 12
+                            },
+                            padding: 16,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        titleColor: '#f1f5f9',
+                        bodyColor: '#e2e8f0',
+                        borderColor: '#334155',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return `${context.dataset.label}: ${context.parsed.y.toFixed(1)} trips`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#334155',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        },
+                        ticks: {
+                            color: '#94a3b8',
+                            font: {
+                                size: 10
+                            },
+                            maxRotation: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    window.addEventListener('load', initDashboard);
+</script>
