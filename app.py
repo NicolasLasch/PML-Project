@@ -145,7 +145,6 @@ def predict_compare():
     except Exception as e:
         print(traceback.format_exc())
         return jsonify({'error': str(e)}), 500
->>>>>>> origin/nico
 
 
 @app.route("/api/recommend", methods=["POST"])
