@@ -215,25 +215,24 @@ def run_full_pipeline():
 
     # --- Saving Outputs & Best Model ---
 
+    # --- Saving Outputs & Best Model ---
+
     def save_outputs(outputs : dict, with_index = None):
 
         for path, output in outputs.items():
             if isinstance(output, pd.DataFrame):
-                # Save Dataframe
                 Path(path).parent.mkdir(
                     parents=True, 
                     exist_ok=True
                 )
-                # Check if df should include index (by variable or id)
                 index_flag = with_index is not None and (
                     output is comparison_results or id(output) in with_index
                 )
                 output.to_csv(
                     path,
-                    index=index_flag    # True for comparison_results, False for others
+                    index=index_flag
                 )
                 print(f"Saved {path}")
-            # Save Charts
             elif isinstance(output, plt.Figure):
                 full_path = f"{OUTPUT_CHARTS_FOLDER}/{path}"
                 Path(full_path).parent.mkdir(
@@ -242,15 +241,32 @@ def run_full_pipeline():
                 )
                 output.savefig(full_path)
                 print(f"Saved chart to {full_path}")
-            
             else:
                 print(f"Skipping unsupported type for {path}")
 
 
-    # Save Best Model
+    # Save ALL Models (not just best)
     print("\nSaving Models / Results ... ... ...")
-    joblib.dump(best_model, f'models/{best_model_name}.joblib')
-    print(f"Best model saved as {best_model_name}.joblib")
+    
+    # Create models directory
+    Path('models').mkdir(exist_ok=True)
+    
+    # Save all 4 models
+    joblib.dump(rf_base, 'models/RF_Baseline.joblib')
+    print("Saved models/RF_Baseline.joblib")
+    
+    joblib.dump(rf_tuned, 'models/RF_Tuned.joblib')
+    print("Saved models/RF_Tuned.joblib")
+    
+    joblib.dump(xgb_base, 'models/XGB_Baseline.joblib')
+    print("Saved models/XGB_Baseline.joblib")
+    
+    joblib.dump(xgb_tuned, 'models/XGB_Tuned.joblib')
+    print("Saved models/XGB_Tuned.joblib")
+    
+    print(f"\n✓ All 4 models saved successfully!")
+    print(f"✓ Best model: {best_model_name}")
+    
     # Save output csv
     outputs = {
         MC_FILE_PATH : comparison_results,
