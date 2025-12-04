@@ -214,9 +214,6 @@ def run_full_pipeline():
 
 
     # --- Saving Outputs & Best Model ---
-
-    # --- Saving Outputs & Best Model ---
-
     def save_outputs(outputs : dict, with_index = None):
 
         for path, output in outputs.items():
@@ -300,6 +297,7 @@ def run_full_pipeline():
         MC_CHART : model_comparison_chart,
         FI_CHART : feature_importance_chart,
         PRED_CHART : predictions_chart,
+        RESIDUAL_CHART : residuals_chart,
         HOURLY_PATTERN_CHART : hourly_patterns_chart,
         WEATHER_CORR_HEATMAP : weather_correlation_chart,
         SEASONAL_PATTERN_CHART : seasonal_patterns_chart
