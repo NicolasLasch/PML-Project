@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
 
 # Copy production files and models into image
 COPY app.py .
-COPY src/feature_engineering.py src/
+COPY src/ src/
 COPY models/ models/
 COPY data/raw/bergen_merged.csv data/raw/
 COPY data/processed/sample_features.csv data/processed/
