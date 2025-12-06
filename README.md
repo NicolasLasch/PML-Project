@@ -54,7 +54,7 @@ Service name: `bergen-bike-api` (any name preferred)
 #### Deployment Source
 ☑️ Container Registry
 
-Image URI: `<AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-1.amazonaws.com/bergen-bike-pred-app:latest`
+Image URI: `<AWS_ACCOUNT_ID>.dkr.ecr.ap-southeast-1.amazonaws.com/bergen-bike-api:latest`
 (private container image URI pushed to ECR previously)
 
 Container port: `8000`
