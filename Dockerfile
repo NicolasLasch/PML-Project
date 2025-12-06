@@ -15,9 +15,12 @@ RUN apt-get update && apt-get install -y \
 
 # Copy production files and models into image
 COPY app.py .
-COPY src/ src/
+COPY src/feature_engineering.py src/
 COPY models/ models/
+COPY data/raw/bergen_merged.csv data/raw/
 COPY data/processed/sample_features.csv data/processed/
+COPY data/processed/feature_engineered_bergen_merged.csv data/processed/
+COPY output/model_comparison_results.csv output/
 COPY templates/ templates/
 
 # Expose Flask port
