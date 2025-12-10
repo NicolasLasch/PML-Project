@@ -54,7 +54,7 @@ jobs:
     - name: Test summary
       if: always()
       run: |
-        echo "✅ Tests completed"
+        echo "All Tests completed"
 
   build-and-deploy:
     name: Build & Deploy to AWS
