@@ -13,6 +13,8 @@ Bergen Bike Sharing Dataset Source :
 
 `https://www.kaggle.com/datasets/amykzhang/bergen-bike-sharing-dataset-2023`
 
+- Download `bergen_merged.csv` in `data/` folder if needed.
+
 ## 🧩 Architecture
 
 Local → Docker Build → Private ECR → App Runner → HTTPS Global API
@@ -52,6 +54,12 @@ venv\Scripts\activate
 
 ```bash
 pip install -r requirements.txt
+```
+
+*Full Pipeline can be executed with:
+
+```bash
+python src/main.py
 ```
 
 **Run without Docker**
