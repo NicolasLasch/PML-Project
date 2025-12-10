@@ -6,3 +6,4 @@ joblib
 flask
 matplotlib
 seaborn
+pytest
